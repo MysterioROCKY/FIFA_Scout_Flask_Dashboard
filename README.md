@@ -1,101 +1,94 @@
-# FIFA Scout — Flask dashboard
+# FIFA Scout — Flask Dashboard
 
-A responsive football analytics dashboard built from the original FIFA web-scraping notebook. The public app reads a local, versioned CSV snapshot, so visitors never trigger a third-party scrape.
+A responsive football analytics dashboard built from a FIFA web-scraping notebook. It turns a notebook-based analysis into an interactive Flask website with player exploration, filtering, charts, wonderkids, and player comparison.
 
-## What changed from the notebook
-
-- Scraping is in `scraper.py`, separate from the web app.
-- The scraper uses BeautifulSoup selectors, a timeout, a clear user-agent, real pagination offsets, and a polite delay.
-- Numeric/currency fields are cleaned before saving. `€120.5M` becomes `120.5` in `value_eur_m`; `€50K` becomes `50` in `wage_eur_k`.
-- Duplicates are removed using `name + team`, instead of dropping hundreds of rows without explanation.
-- `Hits` is excluded because it represents page engagement, not football goals.
-- `DataFrame.append()` is not used.
-
-The included CSV is a small starter snapshot assembled from examples recorded in the original notebook output. It is dated 2020-12-01 and is deliberately labelled as such in the UI. Refresh it only after you review the data source's current robots.txt and Terms of Service.
+> The deployed dashboard reads a local, versioned CSV snapshot. Visitors do not trigger web scraping when they open the site.
 
 ## Features
 
-- Dashboard filters, KPI cards, and five interactive Chart.js charts.
-- Searchable/sortable/paginated DataTables player listing and player-detail modal.
-- Wonderkids section, sortable by potential, value, or overall rating.
+- Interactive dashboard with player count, average age, average overall rating, and highest-potential player.
+- Chart.js visualizations for rating and age distributions, overall vs potential, top potential, and market value.
+- Searchable, sortable, paginated player table with detail modal.
+- Filters for age, overall rating, potential, team, and market value.
+- Wonderkids section for players aged 21 or under with a potential score of at least 85.
 - Two-player radar comparison.
-- JSON API: `/api/dashboard`, `/api/players`, `/api/wonderkids`, and `/api/compare`.
-- Production command with Gunicorn for Render or Google Cloud Run.
+- JSON endpoints: `/api/dashboard`, `/api/players`, `/api/wonderkids`, `/api/compare`, and `/health`.
+- Optional, manual scraper separated from the public Flask routes.
 
-## Run locally
-
-Prerequisite: Python 3.10+. The pinned pandas release supports Python 3.14 as well.
-
-```powershell
-cd "C:\Users\sanyaagr\Documents\ChatGPT\FIFA_Dataset_Analysis--Web_Scraping"
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python app.py
-```
-
-Open `http://127.0.0.1:5000`. Check Dashboard, Players, Compare, About data, then run these browser/API checks:
-
-```powershell
-Invoke-WebRequest http://127.0.0.1:5000/health
-Invoke-WebRequest http://127.0.0.1:5000/api/dashboard
-```
-
-## Optional manual dataset refresh
-
-Never expose this action through a public route. First check the source site's current permissions, then run:
-
-```powershell
-python scraper.py --pages 2 --delay 2
-```
-
-Review `data/fifa_players_cleaned.csv`, test the UI again, and commit the new snapshot only if it is correct.
-
-## GitHub
-
-Create an empty GitHub repository first, then from this folder:
-
-```powershell
-git add .
-git commit -m "Build FIFA Scout Flask dashboard"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/FIFA_Dataset_Analysis--Web_Scraping.git
-git push -u origin main
-```
-
-If your existing GitHub repository already contains files, use its URL in `git remote add origin`, inspect the remote before pushing, and resolve any history difference rather than force-pushing.
-
-## Render deployment
-
-1. Push the tested project to GitHub.
-2. Sign in at Render and choose **New → Web Service**.
-3. Connect the repository and choose branch `main`.
-4. Set Build Command to `pip install -r requirements.txt`.
-5. Set Start Command to `gunicorn --bind 0.0.0.0:$PORT app:app`.
-6. Choose the Free instance type and deploy.
-
-Render deploys Flask apps from GitHub automatically. Its free web services sleep after 15 minutes of inactivity, so the first request after sleep can take around a minute. Do not store runtime uploads or a SQLite database on this free instance because its local filesystem is ephemeral.
-
-## Google Cloud Run deployment (optional)
-
-Cloud Run is a good next step once the local app is approved. It requires a Google Cloud project with billing enabled.
-
-```powershell
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-gcloud run deploy fifa-scout --source . --region asia-south1 --allow-unauthenticated
-```
-
-Choose the displayed service URL after deployment. Set a Cloud Billing budget alert before making the service public. Cloud Run has a usage-based free tier, but costs can occur if you exceed it.
-
-## Project layout
+## Project structure
 
 ```text
 app.py                         Flask routes and JSON API
-scraper.py                     optional manual scraper
-data/fifa_players_cleaned.csv  local dataset snapshot
-templates/                     Jinja/Bootstrap pages
-static/                        site CSS and dashboard JavaScript
-Procfile                       Gunicorn command for Render
+scraper.py                     Optional manual data-refresh script
+data/fifa_players_cleaned.csv  Local player-data snapshot
+templates/                     Jinja and Bootstrap templates
+static/                        Custom CSS and dashboard JavaScript
 requirements.txt               Python dependencies
+Procfile                       Gunicorn command for Render
 ```
+
+## Run locally
+
+Prerequisites: Python 3.10 or later and Git.
+
+```powershell
+git clone https://github.com/MysterioROCKY/FIFA_Dataset_Analysis--Web_Scraping.git
+cd FIFA_Dataset_Analysis--Web_Scraping
+git switch flask-dashboard
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
+.\.venv\Scripts\python.exe app.py
+```
+
+Open `http://127.0.0.1:5000` in a browser.
+
+## Data and quality improvements
+
+The original notebook scraped player data directly into a pandas DataFrame. This project improves that workflow:
+
+- Scraping is isolated in `scraper.py`; the website reads the prepared CSV.
+- HTML is parsed using BeautifulSoup selectors rather than regular expressions.
+- Requests use a timeout, a clear user-agent, pagination offsets, and a delay between source pages.
+- Currency values are converted into numeric values (`€120.5M` becomes `120.5` in `value_eur_m`).
+- Duplicates are removed using player name plus team.
+- The original `Hits` field is not treated as goals; it represents source-site engagement.
+- Deprecated `DataFrame.append()` is not used.
+
+The bundled starter snapshot is based on examples recorded in the original notebook output and is dated `2020-12-01`. It is not current FIFA data.
+
+## Refresh the dataset manually
+
+Only refresh after checking the source website's current `robots.txt` and Terms of Service. Do not add the scraper to a public website route.
+
+```powershell
+.\.venv\Scripts\python.exe scraper.py --pages 2 --delay 2
+```
+
+`--pages 2` requests two source listing pages. `--delay 2` waits two seconds between source requests. The command overwrites `data/fifa_players_cleaned.csv` with cleaned, de-duplicated results.
+
+After reviewing the CSV locally, commit and push it:
+
+```powershell
+git add data/fifa_players_cleaned.csv
+git commit -m "Refresh FIFA player dataset"
+git push
+```
+
+## Render deployment
+
+This project is deployed from the `flask-dashboard` branch.
+
+1. In Render, create a **Web Service** from this GitHub repository.
+2. Select branch `flask-dashboard`.
+3. Select the Python runtime and a Free instance.
+4. Set the build command to `pip install -r requirements.txt`.
+5. Set the start command to `gunicorn --bind 0.0.0.0:$PORT app:app`.
+6. Set the health check path to `/health`.
+7. Deploy. Future pushes to `flask-dashboard` automatically redeploy the app.
+
+Render's Free instances sleep after inactivity, so the first request after sleep can take longer to respond.
+
+## Disclaimer
+
+This is an educational portfolio project. FIFA and related player data belong to their respective owners. Check a data source's permissions before scraping or redistributing its data.
