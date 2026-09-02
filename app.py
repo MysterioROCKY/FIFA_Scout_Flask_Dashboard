@@ -47,22 +47,34 @@ def number_arg(name: str, minimum: float, maximum: float) -> float | None:
 
 
 def filtered_players(frame: pd.DataFrame) -> pd.DataFrame:
-    """Apply validated query-string filters used by both API routes."""
-    minimums = {
-        "min_age": ("age", 14, 50), "max_age": ("age", 14, 50),
-        "min_ova": ("ova", 1, 99), "min_pot": ("pot", 1, 99),
-        "max_value": ("value_eur_m", 0, 1000),
-    }
-    result = frame
-    for query_name, (column, lower, upper) in minimums.items():
-        value = number_arg(query_name, lower, upper)
-        if value is None:
-            continue
-        result = result[result[column] <= value] if query_name.startswith("max_") else result[result[column] >= value]
+    """Apply OR matching across filter categories; age bounds remain one range."""
+    masks: list[pd.Series] = []
+    min_age = number_arg("min_age", 14, 50)
+    max_age = number_arg("max_age", 14, 50)
+    if min_age is not None or max_age is not None:
+        age_mask = pd.Series(True, index=frame.index)
+        if min_age is not None:
+            age_mask &= frame["age"] >= min_age
+        if max_age is not None:
+            age_mask &= frame["age"] <= max_age
+        masks.append(age_mask)
+    for query_name, column, minimum, maximum, operator in (
+        ("min_ova", "ova", 1, 99, ">="),
+        ("min_pot", "pot", 1, 99, ">="),
+        ("max_value", "value_eur_m", 0, 1000, "<="),
+    ):
+        value = number_arg(query_name, minimum, maximum)
+        if value is not None:
+            masks.append(frame[column] >= value if operator == ">=" else frame[column] <= value)
     team = request.args.get("team", "").strip()
     if team:
-        result = result[result["team"].str.casefold() == team.casefold()]
-    return result
+        masks.append(frame["team"].str.casefold() == team.casefold())
+    if not masks:
+        return frame
+    combined = masks[0]
+    for mask in masks[1:]:
+        combined |= mask
+    return frame[combined]
 
 
 def records(frame: pd.DataFrame) -> list[dict[str, Any]]:
@@ -126,6 +138,7 @@ def api_dashboard():
             "scatter": records(data[["name", "team", "ova", "pot", "value_eur_m"]]),
             "top_potential": records(top_potential), "top_value": records(top_value),
         },
+        players=records(data.sort_values(["ova", "pot"], ascending=False)),
     )
 
 
