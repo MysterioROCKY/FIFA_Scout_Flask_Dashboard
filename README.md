@@ -40,7 +40,6 @@ Prerequisites: Python 3.10 or later and Git.
 ```powershell
 git clone https://github.com/MysterioROCKY/FIFA_Scout_Flask_Dashboard.git
 cd FIFA_Scout_Flask_Dashboard
-git switch flask-dashboard
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
