@@ -38,8 +38,8 @@ Procfile                       Gunicorn command for Render
 Prerequisites: Python 3.10 or later and Git.
 
 ```powershell
-git clone https://github.com/MysterioROCKY/FIFA_Dataset_Analysis--Web_Scraping.git
-cd FIFA_Dataset_Analysis--Web_Scraping
+git clone https://github.com/MysterioROCKY/FIFA_Scout_Flask_Dashboard.git
+cd FIFA_Scout_Flask_Dashboard
 git switch flask-dashboard
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
