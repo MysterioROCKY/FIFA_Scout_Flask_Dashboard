@@ -1,8 +1,14 @@
 # FIFA Scout — Flask Dashboard
 
-A responsive football analytics dashboard built from a FIFA web-scraping notebook. It turns a notebook-based analysis into an interactive Flask website with player exploration, filtering, charts, wonderkids, and player comparison.
+A responsive football analytics dashboard built from a FIFA web-scraping notebook. It turns a Python Jupiter notebook-based analysis into an interactive Flask website with player exploration, filtering, charts, wonderkids, and player comparison.
 
-> The deployed dashboard reads a local, versioned CSV snapshot. Visitors do not trigger web scraping when they open the site.
+The deployed dashboard reads a local, versioned CSV snapshot. Visitors do not trigger web scraping when they open the site.
+
+## Live Demo
+
+**Live Application:** https://fifa-scout-sanyam.onrender.com/
+
+**Note:** The application is deployed on Render's free tier. If it has been inactive for some time, the service may take a short time to start when you first open the link.
 
 ## Features
 
@@ -32,9 +38,8 @@ Procfile                       Gunicorn command for Render
 Prerequisites: Python 3.10 or later and Git.
 
 ```powershell
-git clone https://github.com/MysterioROCKY/FIFA_Dataset_Analysis--Web_Scraping.git
-cd FIFA_Dataset_Analysis--Web_Scraping
-git switch flask-dashboard
+git clone https://github.com/MysterioROCKY/FIFA_Scout_Flask_Dashboard.git
+cd FIFA_Scout_Flask_Dashboard
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
@@ -74,21 +79,6 @@ git add data/fifa_players_cleaned.csv
 git commit -m "Refresh FIFA player dataset"
 git push
 ```
-
-## Render deployment
-
-This project is deployed from the `flask-dashboard` branch.
-
-1. In Render, create a **Web Service** from this GitHub repository.
-2. Select branch `flask-dashboard`.
-3. Select the Python runtime and a Free instance.
-4. Set the build command to `pip install -r requirements.txt`.
-5. Set the start command to `gunicorn --bind 0.0.0.0:$PORT app:app`.
-6. Set the health check path to `/health`.
-7. Deploy. Future pushes to `flask-dashboard` automatically redeploy the app.
-
-Render's Free instances sleep after inactivity, so the first request after sleep can take longer to respond.
-
 ## Disclaimer
 
 This is an educational portfolio project. FIFA and related player data belong to their respective owners. Check a data source's permissions before scraping or redistributing its data.
